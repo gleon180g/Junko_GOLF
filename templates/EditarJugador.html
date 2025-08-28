@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-md mx-auto mt-8 bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-bold mb-4">Editar Jugador</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="block font-medium">Nombre:</label>
+            <input type="text" name="nombre_jugador" value="{{ nombre_jugador }}" class="border rounded px-2 py-1 w-full" required>
+        </div>
+        <div class="mb-3 flex items-center">
+            <input type="checkbox" name="es_responsable" id="es_responsable" {% if es_responsable %}checked{% endif %}>
+            <label for="es_responsable" class="ml-2">Responsable de la reserva</label>
+        </div>
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Guardar cambios</button>
+        <a href="{% url 'jugadores' %}" class="ml-4 text-gray-600 hover:underline">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+/* Capitaliza los nombres de los días y meses en FullCalendar */
+.fc .fc-col-header-cell-cushion,
+.fc .fc-daygrid-day-number,
+.fc .fc-toolbar-title {
+    text-transform: capitalize;
+}
+</style>
+
+<div class="px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center mt-8 mb-4">
+        <div>
+            <h1 class="text-3xl font-bold text-green-700 mb-6">Calendario de Reservas</h1>
+            <h3 class="text-xl font-bold text-green-700 mb-6">Visualización mensual de reservas</h3>
+        </div>
+    </div>
+    <div class="bg-white shadow rounded-lg p-4">
+        <div id="calendar" class="h-[600px]"></div>
+    </div>
+</div>
+
+<!-- Modal lateral para reporte de reservas -->
+<div id="modal-reporte-bg" class="fixed inset-0 z-50 bg-black bg-opacity-40 hidden transition-opacity"></div>
+<div id="modal-reporte" class="fixed top-0 left-0 h-full w-full max-w-md bg-white shadow-lg z-50 transform -translate-x-full transition-transform duration-300 flex flex-col border-l-4 border-green-600">
+    <div class="flex items-center justify-between p-4 border-b bg-green-50">
+        <h3 class="text-lg font-semibold text-green-800">Reservas del día <span id="modal-fecha"></span></h3>
+        <button onclick="cerrarModal()" class="text-gray-500 hover:text-red-600 text-2xl leading-none">&times;</button>
+    </div>
+    <div id="modal-contenido" class="p-4 flex-1 overflow-y-auto"></div>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales-all.global.min.js"></script>
+
+<script>
+    // Variables para paginación
+    let reservasData = [];
+    let paginaActual = 1;
+    const reservasPorPagina = 10;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const reservas = JSON.parse('{{ reservas_json|escapejs }}');
+        // Personaliza los eventos con color y badge
+        const events = Array.isArray(reservas) ? reservas.map(r => ({
+            title: r.count + ' reservas',
+            start: r.date,
+            allDay: true,
+            display: 'background',
+            backgroundColor: '#bbf7d0', // Tailwind green-100
+            borderColor: '#22c55e',     // Tailwind green-600
+            textColor: '#166534',       // Tailwind green-800
+            extendedProps: { count: r.count }
+        })) : [];
+
+        const calendarEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'es',
+            events: events,
+            dayMaxEventRows: true,
+            eventContent: function(arg) {
+                // Muestra badge con número de reservas
+                if (arg.event.extendedProps.count) {
+                    return {
+                        html: `<div class="flex justify-center items-center">
+                            <span class="inline-block bg-green-600 text-white text-xs font-bold rounded-full px-2 py-0.5 shadow">${arg.event.extendedProps.count}</span>
+                        </div>`
+                    }
+                }
+                return { html: '' };
+            },
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: ''
+            },
+            buttonText: {
+                today: 'Hoy'
+            },
+            dayCellClassNames: function(arg) {
+                // 1 = lunes (0=domingo)
+                if (arg.date.getDay() === 1) {
+                    return ['bg-gray-200', 'text-gray-400', 'cursor-not-allowed', 'opacity-70', 'relative'];
+                }
+                return [];
+            },
+            dayCellContent: function(arg) {
+                if (arg.date.getDay() === 1) {
+                    return {
+                        html: `<div style="position:relative;min-height:32px;">
+                            <span>${arg.dayNumberText}</span>
+                            <div style="position:absolute;left:0;right:0;bottom:2px;font-size:10px;text-align:center;color:#6b7280;">No disponible</div>
+                        </div>`
+                    }
+                }
+                return { html: `<span>${arg.dayNumberText}</span>` }
+            },
+            dateClick: function(info) {
+                // Evita clicks en lunes
+                if (info.date.getDay() === 1) return;
+                const evento = events.find(e => e.start === info.dateStr);
+                if (evento) {
+                    mostrarReporte(info.dateStr);
+                }
+            },
+            eventClick: function(info) {
+                mostrarReporte(info.event.startStr);
+            },
+            height: 600,
+            selectable: false,
+            selectMirror: false,
+            nowIndicator: true,
+        });
+        calendar.render();
+    });
+
+    function mostrarReporte(fecha) {
+        document.getElementById('modal-fecha').textContent = fecha;
+        document.getElementById('modal-contenido').innerHTML = '<div class="text-center text-gray-500">Cargando...</div>';
+        abrirModal();
+        fetch(`/reservas_por_fecha/?fecha=${fecha}`)
+            .then(response => response.json())
+            .then(data => {
+                reservasData = data.reservas || [];
+                paginaActual = 1;
+                if (reservasData.length > 0) {
+                    mostrarPaginaReservas(paginaActual);
+                } else {
+                    document.getElementById('modal-contenido').innerHTML = '<p class="text-center text-gray-500">No hay reservas para este día.</p>';
+                }
+            })
+            .catch(() => {
+                document.getElementById('modal-contenido').innerHTML = '<p class="text-center text-red-600">Error al cargar las reservas.</p>';
+            });
+    }
+
+    function mostrarPaginaReservas(pagina) {
+        const inicio = (pagina - 1) * reservasPorPagina;
+        const fin = inicio + reservasPorPagina;
+        const reservasPagina = reservasData.slice(inicio, fin);
+
+        let html = `<table class="min-w-full text-sm">
+            <thead>
+                <tr class="bg-green-50">
+                    <th class="px-2 py-1 text-left text-green-800">Reserva</th>
+                    <th class="px-2 py-1 text-left text-green-800">Hora</th>
+                    <th class="px-2 py-1 text-left text-green-800">Hoyo</th>
+                    <th class="px-2 py-1 text-left text-green-800">Jugador</th>
+                </tr>
+            </thead>
+            <tbody>`;
+        reservasPagina.forEach(r => {
+            html += `<tr class="border-b hover:bg-green-50">
+                <td class="px-2 py-1">${r.numero_reserva}</td>
+                <td class="px-2 py-1">${r.hora}</td>
+                <td class="px-2 py-1">${r.hoyo}</td>
+                <td class="px-2 py-1">${r.jugador}</td>
+            </tr>`;
+        });
+        html += `</tbody></table>`;
+
+        // Paginación
+        const totalPaginas = Math.ceil(reservasData.length / reservasPorPagina);
+        if (totalPaginas > 1) {
+            html += `<div class="flex justify-between items-center mt-2 space-x-2">
+                <button type="button" ${pagina <= 1 ? 'disabled' : ''} onclick="cambiarPagina(-1)" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50">Anterior</button>
+                <span>Página ${pagina} de ${totalPaginas}</span>
+                <button type="button" ${pagina >= totalPaginas ? 'disabled' : ''} onclick="cambiarPagina(1)" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50">Siguiente</button>
+            </div>`;
+        }
+
+        document.getElementById('modal-contenido').innerHTML = html;
+    }
+
+    function cambiarPagina(delta) {
+        paginaActual += delta;
+        mostrarPaginaReservas(paginaActual);
+    }
+
+    function abrirModal() {
+        document.getElementById('modal-reporte-bg').classList.remove('hidden');
+        const modal = document.getElementById('modal-reporte');
+        modal.classList.remove('-translate-x-full');
+        modal.classList.add('translate-x-0');
+    }
+
+    function cerrarModal() {
+        document.getElementById('modal-reporte-bg').classList.add('hidden');
+        const modal = document.getElementById('modal-reporte');
+        modal.classList.add('-translate-x-full');
+        modal.classList.remove('translate-x-0');
+    }
+
+    // Cerrar modal al hacer click fuera
+    document.getElementById('modal-reporte-bg').addEventListener('click', cerrarModal);
+</script>
+{% endblock %}

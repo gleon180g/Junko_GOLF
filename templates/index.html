@@ -1,0 +1,282 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Junko Golf Club</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Montserrat', sans-serif; }
+        .title-font { font-family: 'Playfair Display', serif; }
+    </style>
+</head>
+<body class="bg-gray-50">
+<nav class="bg-white shadow fixed w-full z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+        <div class="flex items-center">
+            <img src="{% static 'img/logoJunko.png' %}" alt="Logo Junko Golf Club" class="h-8 w-8 rounded-full">
+            <span class="ml-2 title-font text-lg font-semibold text-green-700">Junko golf club</span>
+        </div>
+        <div>
+            <a href="/login/" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded transition block sm:inline-block">
+                Iniciar sesión
+            </a>
+        </div>
+    </div>
+</nav>
+<div class="pt-20"></div>
+<!-- Hero Section -->
+<div class="relative">
+    <div class="absolute inset-0 hero-gradient"></div>
+    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/b98445ac-74f8-4b5c-b1c0-66cee3454cc6.png" alt="Vista panorámica del campo de golf Junko Golf Club desde el hoyo 18 con fairways verdes perfectamente cuidados y árboles maduros al fondo" 
+         class="w-full h-[70vh] object-cover">
+    <div class="absolute inset-0 flex items-center">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-white max-w-2xl">
+                <h1 class="title-font text-4xl md:text-5xl lg:text-6xl font-bold mb-6">Reserva tu <span class="text-green-300">Tee Time</span> hoy</h1>
+                <p class="text-lg mb-8">Experimenta la excelencia en uno de los campos de golf más exclusivos de la región. Reserva fácilmente tu horario de juego con nuestro sistema online.</p>
+                <a href="#reserva" class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-md transition duration-300 transform hover:scale-105">
+                    Reservar Ahora
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Club Info -->
+<section class="py-16 bg-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="title-font text-3xl md:text-4xl font-bold text-gray-900">Junko Golf Club</h2>
+            <div class="mt-4 h-1 w-20 bg-green-500 mx-auto"></div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-16 items-center">
+            <div class="order-2 md:order-1">
+                <h3 class="title-font text-2xl font-semibold text-gray-900 mb-4">Un campo diseñado para la excelencia</h3>
+                <p class="text-gray-600 mb-4">Nuestro campo de 18 hoyos, diseñado por el reconocido arquitecto de golf Robert Trent Jones Jr., ofrece un desafío gratificante para golfistas de todos los niveles mientras disfrutan de paisajes espectaculares.</p>
+                <p class="text-gray-600 mb-6">Con más de 150 acres de terreno meticulosamente cuidado, incluyendo lagos estratégicos y bunkers desafiantes, cada ronda en Junko Golf Club es una experiencia memorable.</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <svg class="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span class="text-gray-700">18 hoyos par 72</span>
+                    </div>
+                    <div class="flex items-center">
+                        <svg class="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span class="text-gray-700">7,125 yardas</span>
+                    </div>
+                    <div class="flex items-center">
+                        <svg class="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span class="text-gray-700">Driving range</span>
+                    </div>
+                    <div class="flex items-center">
+                        <svg class="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span class="text-gray-700">Clases profesionales</span>
+                    </div>
+                </div>
+            </div>
+            <div class="order-1 md:order-2">
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/9943f4ea-7ce9-49a2-ad11-04198ec1aa44.png" alt="Vista aérea del campo de golf Junko Golf Club mostrando los hoyos 9 al 12 con lagos cristalinos y bunkers de arena blanca" 
+                     class="rounded-lg shadow-xl">
+            </div>
+        </div>
+    </div>
+</section>
+
+    <!-- Gallery -->
+    <section class="py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="title-font text-3xl md:text-4xl font-bold text-gray-900">Galería</h2>
+                <div class="mt-4 h-1 w-20 bg-green-500 mx-auto"></div>
+            </div>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="course-card rounded-lg overflow-hidden shadow-lg transition duration-300">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/af1542e2-9429-47d5-8374-5bc992cc4197.png" alt="Hoyo 4 con fairway largo rodeado de árboles altos y bunker estratégico cerca del green" 
+                         class="w-full h-64 object-cover">
+                    <div class="p-4 bg-white">
+                        <h3 class="title-font text-xl font-semibold text-gray-900">Hoyo 4 - Par 5</h3>
+                        <p class="text-gray-600">560 yardas - Rodeado de árboles centenarios</p>
+                    </div>
+                </div>
+                <div class="course-card rounded-lg overflow-hidden shadow-lg transition duration-300">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/c33ed16e-b19b-46ba-9b70-65f59c692b50.png" alt="Club House con arquitectura moderna y amplias terrazas donde los golfistas disfrutan después del juego" 
+                         class="w-full h-64 object-cover">
+                    <div class="p-4 bg-white">
+                        <h3 class="title-font text-xl font-semibold text-gray-900">Club House</h3>
+                        <p class="text-gray-600">Instalaciones premium para socios e invitados</p>
+                    </div>
+                </div>
+                <div class="course-card rounded-lg overflow-hidden shadow-lg transition duration-300">
+                    <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/dd6d42cc-857e-43a8-b8e3-665c23a46827.png" alt="Academy de golf con profesional enseñando swing completo a estudiante en driving range bajo techo" 
+                         class="w-full h-64 object-cover">
+                    <div class="p-4 bg-white">
+                        <h3 class="title-font text-xl font-semibold text-gray-900">Golf Academy</h3>
+                        <p class="text-gray-600">Clases con profesionales certificados PGA</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-8">
+                <a href="#" class="inline-block border border-green-600 text-green-600 hover:bg-green-600 hover:text-white font-medium py-2 px-6 rounded-md transition duration-300">
+                    Ver más imágenes
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="py-16 bg-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="title-font text-3xl md:text-4xl font-bold text-gray-900">Lo que dicen nuestros golfistas</h2>
+                <div class="mt-4 h-1 w-20 bg-green-500 mx-auto"></div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-4">
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/e3b9d27c-d893-43e8-981d-2c0bae602c51.png" alt="Retrato del golfista profesional Ricardo Gómez sonriendo con fondo de fairway verde" 
+                             class="h-12 w-12 rounded-full mr-3">
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-900">Ricardo Gómez</h4>
+                            <p class="text-sm text-gray-500">Golfista profesional</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">"Junko Golf Club ofrece uno de los campos mejor cuidados que he jugado en la región. El diseño estratégico de los hoyos y la calidad de los greens hacen que cada ronda sea un verdadero placer."</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-4">
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/6064a042-5cf4-417f-bf21-93bf4944dff9.png" alt="Retrato de la golfista amateur Laura Sánchez con gorra de golf en día soleado" 
+                             class="h-12 w-12 rounded-full mr-3">
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-900">Laura Sánchez</h4>
+                            <p class="text-sm text-gray-500">Golfista amateur</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">"Como principiante, me encanta la variedad de hoyos que permiten mejorar distintas habilidades. El personal es increíblemente acogedor y las instalaciones son magníficas."</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-4">
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/08fa2290-ad99-4e7e-96e7-0fc92063a345.png" alt="Retrato del empresario Alejandro Torres con chaqueta de golf y fondo de paisaje montañoso" 
+                             class="h-12 w-12 rounded-full mr-3">
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-900">Alejandro Torres</h4>
+                            <p class="text-sm text-gray-500">Empresario y socio</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">"El sistema de reservas online ha simplificado mucho la organización de nuestros juegos corporativos. Siempre puntuales y con un servicio excepcional en el campo."</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-16 bg-green-700 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="title-font text-3xl md:text-4xl font-bold mb-6">¿Listo para tu próxima ronda?</h2>
+            <p class="text-lg mb-8 max-w-2xl mx-auto">Únete a nuestra comunidad de golfistas apasionados y experimenta el juego como nunca antes.</p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="#reserva" class="bg-white text-green-700 hover:bg-gray-100 font-bold py-3 px-8 rounded-md transition duration-300">
+                    Reservar Tee Time
+                </a>
+                <a href="#" class="border-2 border-white text-white hover:bg-white hover:text-green-700 font-bold py-3 px-8 rounded-md transition duration-300">
+                    Conviértete en Socio
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-300 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="title-font text-lg font-semibold text-white mb-4">Junko Golf Club</h3>
+                    <p class="mb-4">El mejor campo de golf de la región, diseñado para ofrecer una experiencia excepcional tanto para golfistas competitivos como recreativos.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/8c06d291-7ac6-40fb-b501-5df93b3cad98.png" alt="Icono de Facebook en color blanco para redes sociales" class="h-6 w-6">
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/4aa722db-005a-4a68-bb82-5557df1d2168.png" alt="Icono de Instagram en color blanco para redes sociales" class="h-6 w-6">
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/5ab72b0b-9c92-4b54-9d6d-ea6119fa7d01.png" alt="Icono de Twitter en color blanco para redes sociales" class="h-6 w-6">
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="title-font text-lg font-semibold text-white mb-4">Horarios</h3>
+                    <ul class="space-y-2">
+                        <li><span class="font-medium">Lunes-Viernes:</span> 6:30 AM - 7:00 PM</li>
+                        <li><span class="font-medium">Sábado:</span> 6:00 AM - 8:00 PM</li>
+                        <li><span class="font-medium">Domingo:</span> 6:00 AM - 7:30 PM</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="title-font text-lg font-semibold text-white mb-4">Enlaces Rápidos</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:text-white">Calendario de Torneos</a></li>
+                        <li><a href="#" class="hover:text-white">Tarifas y Membresías</a></li>
+                        <li><a href="#" class="hover:text-white">Reglas del Club</a></li>
+                        <li><a href="#" class="hover:text-white">Política de Cancelación</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="title-font text-lg font-semibold text-white mb-4">Contacto</h3>
+                    <address class="not-italic">
+                        <p class="mb-2">Carretera el Junquito KM 20. Urbanización Junko Country. El Junquito. Edo. La Guaira. Venezuela.
+
+</p>
+                        <p class="mb-2">+58 212 4121223</p>
+                        <p class="mb-4">info@junkogolf.com</p>
+                        <a href="#" class="text-green-400 hover:text-green-300 font-medium">Cómo llegar</a>
+                    </address>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-sm text-center">
+                <p>© 2023 Junko Golf Club. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Login dropdown functionality
+            const loginButton = document.getElementById('loginButton');
+            const loginDropdown = document.getElementById('loginDropdown');
+            
+            loginButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                loginDropdown.classList.toggle('hidden');
+            });
+            
+            document.addEventListener('click', function() {
+                loginDropdown.classList.add('hidden');
+            });
+            
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+

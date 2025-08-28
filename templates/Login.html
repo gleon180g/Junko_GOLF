@@ -1,0 +1,287 @@
+{% load static %}   
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Junko Golf Club - Autenticación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+    body { font-family: 'Montserrat', sans-serif; }
+    .title-font { font-family: 'Playfair Display', serif; }
+    .sidebar-link:hover { background-color: rgba(22, 163, 74, 0.1); }
+    .sidebar-link.active { background-color: rgba(22, 163, 74, 0.2); border-left: 4px solid rgb(22, 163, 74); }
+    @media (min-width: 768px) {
+        #main-content {
+            margin-left: 16rem;
+            transition: margin-left 0.2s;
+        }
+        body.sidebar-collapsed #main-content {
+            margin-left: 0 !important;
+        }
+        #sidebar {
+            transition: margin-left 0.2s;
+        }
+        body.sidebar-collapsed #sidebar {
+            margin-left: -16rem;
+        }
+    }
+    @media (max-width: 767px) {
+        #main-content {
+            margin-left: 0 !important;
+        }
+    }
+</style>
+</head>
+<body>
+    <!-- Main Container -->
+    <div class="flex flex-col min-h-screen auth-container">
+        <!-- Header -->
+        <div class="flex justify-center py-12 px-4">
+            <a href="/" class="flex items-center">
+            <img src="{% static 'img/logoJunko.png' %}" 
+                alt="Logo Junko Golf Club" 
+                class="h-10 w-10 rounded-full">
+                <h1 class="ml-3 title-font text-3xl font-semibold text-gray-800">Junko Golf Club</h1>
+            </a>
+        </div>
+
+        <!-- Auth Content -->
+        <div id="auth-content" class="flex-grow flex items-center justify-center px-4 pb-12 sm:px-6 lg:px-8">
+            <!-- Login Page (default) -->
+            <div id="login-container" class="auth-card w-full max-w-md rounded-lg bg-white p-8">
+                <div class="text-center mb-8">
+                    <h2 class="title-font text-3xl font-bold text-gray-900">Iniciar Sesión</h2>
+                    <p class="mt-2 text-sm text-gray-600">Ingresa tus credenciales para acceder al sistema</p>
+                </div>
+                {% if messages %}
+                {% for message in messages %}
+                    <div class="mb-4 p-3 rounded bg-green-100 text-green-700 text-sm">{{ message }}</div>
+                {% endfor %}
+                {% endif %}
+                {% if error %}
+                <div class="mb-4 p-3 rounded bg-red-100 text-red-700 text-sm">{{ error }}</div>
+                {% endif %}
+                <form class="space-y-6" id="login-form" method="post" action="">
+                    {% csrf_token %}
+                    <div>
+                        <label for="login-username" class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+                        <input id="login-username" name="username" type="text" autocomplete="username" required 
+                               class="input-field w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                               placeholder="Tu usuario">
+                    </div>
+                    <div class="relative">
+                        <label for="login-password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                        <input id="login-password" name="password" type="password" autocomplete="current-password" required 
+                               class="input-field w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                               placeholder="••••••••">
+                        <span class="absolute password-toggle" onclick="togglePassword('login-password')">
+                            <svg id="eye-icon-login" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <svg id="eye-off-icon-login" class="h-5 w-5 text-gray-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                            </svg>
+                        </span>
+                        <div class="flex justify-between items-center mt-1">
+                            <div class="flex items-center">
+                                <input id="remember-me" name="remember-me" type="checkbox" 
+                                       class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                                <label for="remember-me" class="ml-2 block text-xs text-gray-700">Recordar sesión</label>
+                            </div>
+                            <a href="#" onclick="showForgotPassword()" class="text-xs font-medium text-green-600 hover:text-green-500">¿Olvidaste tu contraseña?</a>
+                        </div>
+                    </div>
+                    <div>
+                        <button type="submit" 
+                                class="btn-primary w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Ingresar
+                        </button>
+                    </div>
+                </form>
+                <div class="mt-8 text-center">
+                    <p class="text-sm text-gray-600">
+                        ¿No tienes una cuenta? 
+                        <a href="#" onclick="showRegister()" class="font-medium text-green-600 hover:text-green-500">Regístrate ahora</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Register Page (hidden by default) -->
+            <div id="register-container" class="auth-card {% if show_register %}{% else %}hidden{% endif %} w-full max-w-md rounded-lg bg-white p-8">
+                <div class="text-center mb-8">
+                    <h2 class="title-font text-3xl font-bold text-gray-900">Registro de Miembro</h2>
+                    <p class="mt-2 text-sm text-gray-600">Crea tu cuenta para acceder a todos los beneficios</p>
+                </div>
+                {% if register_error %}
+                <div class="mb-4 p-3 rounded bg-red-100 text-red-700 text-sm">{{ register_error }}</div>
+                {% endif %}
+                {% if register_success %}
+                <div class="mb-4 p-3 rounded bg-green-100 text-green-700 text-sm">{{ register_success }}</div>
+                {% endif %}
+                <form class="space-y-4" id="register-form" method="post" action="/register/">
+                    {% csrf_token %}
+                    <div>
+                        <label for="register-name" class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+                        <input id="register-name" name="name" type="text" autocomplete="name" required
+                            class="input-field w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                            placeholder="Juan Pérez"
+                            value="{{ name|default_if_none:'' }}">
+                    </div>
+                    <div>
+                        <label for="register-email" class="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
+                        <input id="register-email" name="email" type="email" autocomplete="email" required
+                            class="input-field w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                            placeholder="ejemplo@email.com"
+                            value="{{ email|default_if_none:'' }}">
+                    </div>
+                    <div class="relative">
+                        <label for="register-password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                        <input id="register-password" name="password" type="password" autocomplete="new-password" required 
+                               class="input-field w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                               placeholder="••••••••">
+                        <span class="absolute password-toggle" onclick="togglePassword('register-password')">
+                            <svg id="eye-icon-register" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <svg id="eye-off-icon-register" class="h-5 w-5 text-gray-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                            </svg>
+                        </span>
+                        <p class="mt-1 text-xs text-gray-500">Mínimo 8 caracteres, incluyendo números y mayúsculas</p>
+                    </div>
+                    <div class="relative">
+                        <label for="register-confirm-password" class="block text-sm font-medium text-gray-700 mb-1">Confirmar contraseña</label>
+                        <input id="register-confirm-password" name="confirm-password" type="password" autocomplete="new-password" required 
+                               class="input-field w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                               placeholder="••••••••">
+                        <span class="absolute password-toggle" onclick="togglePassword('register-confirm-password')">
+                            <svg id="eye-icon-confirm" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <svg id="eye-off-icon-confirm" class="h-5 w-5 text-gray-400 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                            </svg>
+                        </span>
+                    </div>
+                    <div class="flex items-center mt-4">
+                        <input id="terms" name="terms" type="checkbox" required 
+                               class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                        <label for="terms" class="ml-2 block text-xs text-gray-700">
+                            Acepto los <a href="#" class="text-green-600 hover:text-green-500">términos y condiciones</a> y 
+                            <a href="#" class="text-green-600 hover:text-green-500">política de privacidad</a>
+                        </label>
+                    </div>
+                    <div class="pt-2">
+                        <button type="submit" 
+                                class="btn-primary w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Crear cuenta
+                        </button>
+                    </div>
+                </form>
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-600">
+                        ¿Ya tienes una cuenta? 
+                        <a href="#" onclick="showLogin()" class="font-medium text-green-600 hover:text-green-500">Inicia sesión</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Forgot Password Page (hidden by default) -->
+            <div id="forgot-password-container" class="auth-card hidden w-full max-w-md rounded-lg bg-white p-8">
+                <div class="text-center mb-8">
+                    <img src="{% static 'img/candado.png' %}" alt="Ícono de candado verde para recuperación de contraseña" class="h-16 w-16 mx-auto">
+                    <h2 class="title-font text-3xl font-bold text-gray-900 mt-4">Recuperar Contraseña</h2>
+                    <p class="mt-2 text-sm text-gray-600">Ingresa tu correo electrónico para recibir instrucciones de recuperación</p>
+                </div>
+                <form class="space-y-6" id="forgot-password-form">
+                    <div>
+                        <label for="forgot-email" class="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
+                        <input id="forgot-email" name="email" type="email" autocomplete="email" required 
+                               class="input-field w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+                               placeholder="ejemplo@email.com">
+                    </div>
+                    <div>
+                        <button type="submit" 
+                                class="btn-primary w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Enviar enlace de recuperación
+                        </button>
+                    </div>
+                </form>
+                <div class="mt-6 text-center">
+                    <a href="#" onclick="showLogin()" class="text-sm font-medium text-green-600 hover:text-green-500">
+                        ← Volver al inicio de sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="py-6 px-4 text-center">
+            <p class="text-xs text-gray-500">
+                © 2023 Junko Golf Club. Todos los derechos reservados.
+            </p>
+        </div>
+    </div>
+
+   <script>
+    // Navigation between auth pages
+    function showRegister() {
+        document.getElementById('login-container').classList.add('hidden');
+        document.getElementById('register-container').classList.remove('hidden');
+        document.getElementById('forgot-password-container').classList.add('hidden');
+    }
+    function showLogin() {
+        document.getElementById('register-container').classList.add('hidden');
+        document.getElementById('forgot-password-container').classList.add('hidden');
+        document.getElementById('login-container').classList.remove('hidden');
+    }
+    function showForgotPassword() {
+        document.getElementById('login-container').classList.add('hidden');
+        document.getElementById('register-container').classList.add('hidden');
+        document.getElementById('forgot-password-container').classList.remove('hidden');
+    }
+    // Toggle password visibility
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const eyeIcon = document.getElementById(`eye-icon-${fieldId.split('-')[1]}`);
+        const eyeOffIcon = document.getElementById(`eye-off-icon-${fieldId.split('-')[1]}`);
+        if (field.type === 'password') {
+            field.type = 'text';
+            eyeIcon.classList.add('hidden');
+            eyeOffIcon.classList.remove('hidden');
+        } else {
+            field.type = 'password';
+            eyeIcon.classList.remove('hidden');
+            eyeOffIcon.classList.add('hidden');
+        }
+    }
+    // Validación de contraseñas iguales en el registro
+    document.getElementById('register-form').addEventListener('submit', function(e) {
+        const pass = document.getElementById('register-password').value;
+        const confirm = document.getElementById('register-confirm-password').value;
+        if (pass !== confirm) {
+            e.preventDefault();
+            alert('Las contraseñas no coinciden');
+        }
+    });
+    // Solo la lógica de recuperación de contraseña debe prevenir el submit
+    document.getElementById('forgot-password-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const email = document.getElementById('forgot-email').value;
+        if (!email) {
+            alert('Por favor ingresa tu correo electrónico');
+            return;
+        }
+        // Aquí iría la lógica de recuperación de contraseña real
+        console.log('Password reset requested for:', email);
+        alert('Se ha enviado un enlace de recuperación a tu correo electrónico');
+        showLogin();
+    });
+</script>
+</body>
+</html>

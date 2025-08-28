@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<div class="px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center mt-8 mb-4">
+        <h1 class="text-3xl font-bold text-green-700 mb-6">Reporte Caddie Master</h1>
+    </div>
+    <div class="bg-white shadow rounded-lg p-4">
+        <div class="mb-6 flex flex-col sm:flex-row sm:items-end gap-4">
+            <div>
+                <label for="fecha-reporte" class="block text-sm font-medium text-gray-700 mb-1">Selecciona una fecha:</label>
+                <input type="date" id="fecha-reporte" class="block w-48 border border-gray-300 rounded-md shadow-sm px-3 py-2 focus:ring-green-500 focus:border-green-500 transition">
+            </div>
+            <div>
+                <button onclick="cargarReporte()" class="mt-6 sm:mt-0 px-6 py-2 bg-green-600 text-white rounded shadow hover:bg-green-700 transition">
+                    Ver reporte
+                </button>
+                <button id="btn-pdf" class="mt-6 sm:mt-0 px-6 py-2 bg-red-600 text-white rounded shadow hover:bg-red-700 transition">
+                    Descargar PDF
+                </button>
+            </div>
+        </div>
+        <div id="reporte-caddie" class="overflow-x-auto"></div>
+    </div>
+</div>
+
+<script>
+function cargarReporte() {
+    const fecha = document.getElementById('fecha-reporte').value;
+    if (!fecha) {
+        document.getElementById('reporte-caddie').innerHTML = '<p class="text-red-600">Selecciona una fecha.</p>';
+        return;
+    }
+    document.getElementById('reporte-caddie').innerHTML = 'Cargando...';
+    fetch(`/reporte_caddie_master/?fecha=${fecha}`)
+        .then(response => response.json())
+        .then(data => {
+            const salidas = data.salidas || [];
+            if (salidas.length === 0) {
+                document.getElementById('reporte-caddie').innerHTML = '<p>No hay salidas para este día.</p>';
+                return;
+            }
+            let html = `<table class="min-w-full text-sm">
+                <thead>
+                    <tr class="bg-green-50 border-b border-green-200">
+                        <th class="px-4 py-2 text-left text-green-800 font-semibold">Hora</th>
+                        <th class="px-4 py-2 text-left text-green-800 font-semibold">Hoyo</th>
+                        <th class="px-4 py-2 text-left text-green-800 font-semibold">Jugadores</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white">`;
+            salidas.forEach(s => {
+                html += `<tr class="border-b">
+                    <td class="px-4 py-2">${s.hora}</td>
+                    <td class="px-4 py-2">${s.hoyo}</td>
+                    <td class="px-4 py-2">
+                        ${Array.isArray(s.jugadores) ? s.jugadores.map(j => `<div>${j}</div>`).join('') : s.jugadores}
+                    </td>
+                </tr>`;
+            });
+            html += `</tbody></table>`;
+            document.getElementById('reporte-caddie').innerHTML = html;
+        })
+        .catch(() => {
+            document.getElementById('reporte-caddie').innerHTML = '<p>Error al cargar el reporte.</p>';
+        });
+}
+
+document.getElementById('btn-pdf').onclick = function() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const fecha = document.getElementById('fecha-reporte').value;
+    const fechaFormateada = fecha ? fecha.split('-').reverse().join('/') : '';
+    let y = 20;
+    const startX = 10;
+    const colWidths = [30, 20, 120]; // Hora, Hoyo, Jugadores
+    const rowHeight = 7;
+    let totalJugadores = 0;
+    let page = 1;
+    const maxY = 240; // Margen inferior para paginación
+    let totalPages = 1;
+    let rowsData = [];
+
+    // Prepara los datos para saber cuántas páginas habrá
+    const rows = document.querySelectorAll("#reporte-caddie tbody tr");
+    rows.forEach(row => {
+        const cols = row.querySelectorAll("td");
+        const hora = cols[0].innerText;
+        const hoyo = cols[1].innerText;
+        const jugadores = cols[2].innerText.split('\n').map(j => j.trim()).filter(j => j);
+        rowsData.push({hora, hoyo, jugadores});
+    });
+
+    // Calcula total de páginas
+    let tempY = y + 10 + rowHeight; // Título + espacio + encabezado
+    totalPages = 1;
+    rowsData.forEach(r => {
+        let grupoHeight = Math.max(rowHeight, r.jugadores.length * 6) + 6; // +6 para separación extra
+        if (tempY + grupoHeight > maxY) {
+            totalPages++;
+            tempY = 20 + rowHeight;
+        }
+        tempY += grupoHeight;
+    });
+
+    // Título
+    doc.setFontSize(15);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Reporte Caddie Master a la fecha: ${fechaFormateada}`, startX, y);
+    y += 10;
+
+    // Encabezados
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setFillColor(16, 185, 129); // Verde (Tailwind green-600)
+    doc.setTextColor(255,255,255);
+    doc.rect(startX, y - 6, colWidths[0] + colWidths[1] + colWidths[2], rowHeight, 'F');
+    doc.text("Hora", startX + 2, y - 1);
+    doc.text("Hoyo", startX + colWidths[0] + 2, y - 1);
+    doc.text("Jugadores", startX + colWidths[0] + colWidths[1] + 2, y - 1);
+    y += rowHeight;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(0,0,0);
+
+    let currentPage = 1;
+
+    rowsData.forEach((r, idx) => {
+        totalJugadores += r.jugadores.length;
+        let grupoHeight = Math.max(rowHeight, r.jugadores.length * 6) + 6; // +6 para separación extra
+
+        // Salto de página si es necesario
+        if (y + grupoHeight > maxY) {
+            // Footer de paginación
+            doc.setFontSize(10);
+            doc.setTextColor(16, 185, 129);
+            doc.text(`Página ${currentPage} de ${totalPages}`, startX, 285);
+            doc.addPage();
+            currentPage++;
+            y = 20;
+            // Redibuja encabezado en cada página
+            doc.setFontSize(12);
+            doc.setFont("helvetica", "bold");
+            doc.setFillColor(16, 185, 129);
+            doc.setTextColor(255,255,255);
+            doc.rect(startX, y - 6, colWidths[0] + colWidths[1] + colWidths[2], rowHeight, 'F');
+            doc.text("Hora", startX + 2, y - 1);
+            doc.text("Hoyo", startX + colWidths[0] + 2, y - 1);
+            doc.text("Jugadores", startX + colWidths[0] + colWidths[1] + 2, y - 1);
+            y += rowHeight;
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(11);
+            doc.setTextColor(0,0,0);
+        }
+
+        doc.text(r.hora, startX + 2, y + 2);
+        doc.text(r.hoyo, startX + colWidths[0] + 2, y + 2);
+
+        let yJug = y + 2;
+        r.jugadores.forEach(jugador => {
+            doc.text(jugador, startX + colWidths[0] + colWidths[1] + 2, yJug);
+            yJug += 6;
+        });
+
+        // Línea divisoria
+        doc.setDrawColor(229, 231, 235); // gray-200
+        doc.line(startX, yJug + 2, startX + colWidths[0] + colWidths[1] + colWidths[2], yJug + 2);
+
+        y = yJug + 6; // Más espacio entre registros
+    });
+
+    // Total de jugadores
+    if (y + 15 > maxY) {
+        doc.setFontSize(10);
+        doc.setTextColor(16, 185, 129);
+        doc.text(`Página ${currentPage} de ${totalPages}`, startX, 285);
+        doc.addPage();
+        currentPage++;
+        y = 20;
+    }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(16, 185, 129);
+    doc.text(`Total de jugadores: ${totalJugadores}`, startX, y + 10);
+
+    // Footer de paginación en la última página
+    doc.setFontSize(10);
+    doc.setTextColor(16, 185, 129);
+    doc.text(`Página ${currentPage} de ${totalPages}`, startX, 285);
+
+    doc.save("reporte_caddie_master.pdf");
+};
+</script>
+{% endblock %}

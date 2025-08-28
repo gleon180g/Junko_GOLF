@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-8">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold text-green-700">Reporte General de Reservas</h2>
+        <a href="#" id="btn-nueva-reserva" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded shadow transition">
+            + Añadir nuevo
+        </a>
+    </div>
+    <div class="bg-white shadow rounded-lg p-4">
+        <form id="filtros-reporte" class="flex flex-wrap gap-4 mb-4 items-end" onsubmit="filtrarReporte(event)">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Fecha desde:</label>
+                <input type="date" id="fecha-desde" class="mt-1 block w-40 border-gray-300 rounded-md shadow-sm focus:ring-green-400 focus:border-green-400">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Fecha hasta:</label>
+                <input type="date" id="fecha-hasta" class="mt-1 block w-40 border-gray-300 rounded-md shadow-sm focus:ring-green-400 focus:border-green-400">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Jugador:</label>
+                <input type="text" id="filtro-jugador" placeholder="Nombre jugador" class="mt-1 block w-48 border-gray-300 rounded-md shadow-sm focus:ring-green-400 focus:border-green-400">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Hoyo:</label>
+                <input type="text" id="filtro-hoyo" placeholder="Hoyo" class="mt-1 block w-24 border-gray-300 rounded-md shadow-sm focus:ring-green-400 focus:border-green-400">
+            </div>
+            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition">Buscar</button>
+            <button type="button" id="reset-filtros" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">Reset</button>
+        </form>
+        <div id="reporte-contenido" class="overflow-x-auto"></div>
+        <div id="total-registros" class="mt-4 text-green-700 font-semibold"></div>
+    </div>
+    {% if messages %}
+      <div>
+        {% for message in messages %}
+          <div class="mb-4 px-4 py-2 rounded bg-green-100 text-green-800 border border-green-300">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+</div>
+
+<!-- Modal Nueva Reserva -->
+<div id="modal-nueva-reserva" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
+  <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative">
+    <button id="cerrar-modal-reserva" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+    <h2 class="text-xl font-bold text-green-700 mb-4">Nueva Reserva</h2>
+    <form id="form-nueva-reserva" method="post" action="/reservas/nuevo/">
+        {% csrf_token %}
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+          <input type="date" name="fecha" id="reserva-fecha" required class="w-full border rounded px-3 py-2">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Hora</label>
+          <select name="hora" id="reserva-hora" required class="w-full border rounded px-3 py-2">
+            <option value="">Seleccione fecha y hoyo</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Hoyo</label>
+          <select name="hoyo" id="reserva-hoyo" required class="w-full border rounded px-3 py-2">
+            <option value="1">1</option>
+            <option value="10">10</option>
+          </select>
+        </div>
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Jugadores (mínimo 3, máximo 4)</label>
+        <div id="jugadores-lista">
+          <!-- Jugadores generados por JS -->
+        </div>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" id="cancelar-nueva-reserva" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Cancelar</button>
+        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let reservasData = [];
+let paginaActual = 1;
+const reservasPorPagina = 15;
+
+function filtrarReporte(event) {
+    event.preventDefault();
+    cargarReporte();
+}
+
+function cargarReporte() {
+    const desde = document.getElementById('fecha-desde').value;
+    const hasta = document.getElementById('fecha-hasta').value;
+    const jugador = document.getElementById('filtro-jugador').value;
+    const hoyo = document.getElementById('filtro-hoyo').value;
+
+    let params = [];
+    if (desde) params.push(`desde=${desde}`);
+    if (hasta) params.push(`hasta=${hasta}`);
+    if (jugador) params.push(`jugador=${encodeURIComponent(jugador)}`);
+    if (hoyo) params.push(`hoyo=${encodeURIComponent(hoyo)}`);
+
+    document.getElementById('reporte-contenido').innerHTML = 'Cargando...';
+    fetch(`/reporte_reservas/?${params.join('&')}`)
+        .then(response => response.json())
+        .then(data => {
+            reservasData = data.reservas || [];
+            paginaActual = 1;
+            if (reservasData.length > 0) {
+                mostrarPaginaReporte(paginaActual);
+            } else {
+                document.getElementById('reporte-contenido').innerHTML = '<p>No hay reservas para los filtros seleccionados.</p>';
+                document.getElementById('total-registros').textContent = 'Total de registros: 0';
+            }
+        })
+        .catch(() => {
+            document.getElementById('reporte-contenido').innerHTML = '<p>Error al cargar las reservas.</p>';
+            document.getElementById('total-registros').textContent = '';
+        });
+}
+
+function mostrarPaginaReporte(pagina) {
+    const inicio = (pagina - 1) * reservasPorPagina;
+    const fin = inicio + reservasPorPagina;
+    const reservasPagina = reservasData.slice(inicio, fin);
+
+    let html = `<table class="min-w-full text-sm">
+        <thead>
+            <tr class="bg-green-100">
+                <th class="px-4 py-2 text-left text-xs font-semibold text-green-700"># Reserva</th>
+                <th class="px-4 py-2 text-left text-xs font-semibold text-green-700">Jugador</th>
+                <th class="px-4 py-2 text-left text-xs font-semibold text-green-700">Fecha</th>
+                <th class="px-4 py-2 text-left text-xs font-semibold text-green-700">Hora</th>
+                <th class="px-4 py-2 text-left text-xs font-semibold text-green-700">Hoyo</th>
+                <th class="px-4 py-2 text-center text-xs font-semibold text-green-700">Acciones</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white">`;
+    reservasPagina.forEach(r => {
+        html += `<tr class="border-b">
+            <td class="px-4 py-2">${r.numero_reserva}</td>
+            <td class="px-4 py-2">
+                <div>
+                    <div class="font-medium text-gray-900">${r.jugador || r.nombre_jugador || ''}</div>
+                </div>
+            </td>
+            <td class="px-4 py-2">${formatearFecha(r.fecha)}</td>
+            <td class="px-4 py-2">${formatearHora(r.hora)}</td>
+            <td class="px-4 py-2">${r.hoyo}</td>
+            <td class="px-4 py-2 text-center">
+                <div class="flex gap-2 justify-center">
+                    <a href="/reservas/editar/${r.numero_reserva}/" class="inline-flex items-center px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs font-semibold transition" title="Modificar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-2.828 0L9 13z"/></svg>
+                    </a>
+                    <button onclick="eliminarReserva('${r.numero_reserva}')" class="inline-flex items-center px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs font-semibold transition" title="Eliminar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+    });
+    html += `</tbody></table>`;
+
+    // ...paginación y total igual que antes...
+    const totalPaginas = Math.ceil(reservasData.length / reservasPorPagina);
+    if (totalPaginas > 1) {
+        html += `<div class="flex justify-between items-center mt-2 space-x-2">
+            <button type="button" ${pagina <= 1 ? 'disabled' : ''} onclick="cambiarPaginaReporte(-1)" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50">Anterior</button>
+            <span>Página ${pagina} de ${totalPaginas}</span>
+            <button type="button" ${pagina >= totalPaginas ? 'disabled' : ''} onclick="cambiarPaginaReporte(1)" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50">Siguiente</button>
+        </div>`;
+    }
+
+    document.getElementById('reporte-contenido').innerHTML = html;
+    document.getElementById('total-registros').textContent = `Total de registros: ${reservasData.length}`;
+}
+// Sugerencia: función para eliminar (puedes mejorar con modal de confirmación)
+function eliminarReserva(numeroReserva) {
+    if (confirm('¿Seguro que deseas eliminar la reserva ' + numeroReserva + '?')) {
+        // Aquí puedes hacer un fetch o AJAX para eliminar en backend
+        alert('Funcionalidad de eliminación pendiente de implementar.');
+    }
+}
+
+function cambiarPaginaReporte(delta) {
+    paginaActual += delta;
+    mostrarPaginaReporte(paginaActual);
+}
+
+// Utilidades para formato
+function formatearFecha(fechaStr) {
+    if (!fechaStr) return '';
+    const [y, m, d] = fechaStr.split('-');
+    return `${d}/${m}/${y}`;
+}
+
+function formatearHora(horaStr) {
+    if (!horaStr) return '';
+    const [h, m] = horaStr.split(':');
+    let hour = parseInt(h, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12;
+    return `${hour.toString().padStart(2, '0')}:${m} ${ampm}`;
+}
+
+// Botón reset
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('reset-filtros').addEventListener('click', function() {
+        document.getElementById('fecha-desde').value = '';
+        document.getElementById('fecha-hasta').value = '';
+        document.getElementById('filtro-jugador').value = '';
+        document.getElementById('filtro-hoyo').value = '';
+        cargarReporte();
+    });
+
+    // Carga inicial
+    cargarReporte();
+
+    // Modal: inicialización
+    document.getElementById('btn-nueva-reserva').addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('modal-nueva-reserva').classList.remove('hidden');
+        generarJugadores();
+        // Limpia el select de horas
+        document.getElementById('reserva-hora').innerHTML = '<option value="">Seleccione fecha y hoyo</option>';
+        // Limpia fecha y hoyo
+        document.getElementById('reserva-fecha').value = '';
+        document.getElementById('reserva-hoyo').value = '1';
+    });
+    document.getElementById('cerrar-modal-reserva').onclick =
+    document.getElementById('cancelar-nueva-reserva').onclick = function() {
+        document.getElementById('modal-nueva-reserva').classList.add('hidden');
+        document.getElementById('form-nueva-reserva').reset();
+        document.getElementById('reserva-hora').innerHTML = '<option value="">Seleccione fecha y hoyo</option>';
+    };
+
+    // Cargar horas disponibles cuando cambia fecha u hoyo
+    document.getElementById('reserva-fecha').addEventListener('change', cargarHorasDisponibles);
+    document.getElementById('reserva-hoyo').addEventListener('change', cargarHorasDisponibles);
+});
+
+// Solo genera los campos de jugadores
+function generarJugadores() {
+    const cont = document.getElementById('jugadores-lista');
+    cont.innerHTML = '';
+    for (let i = 1; i <= 4; i++) {
+        cont.innerHTML += `
+        <div class="flex gap-2 mb-2 items-center">
+            <input type="text" name="jugador_nombre_${i}" placeholder="Nombre jugador" class="border rounded px-2 py-1 flex-1" ${i<=3?'required':''}>
+            <input type="number" name="jugador_handicap_${i}" placeholder="Handicap" class="border rounded px-2 py-1 w-24">
+            <label class="flex items-center text-xs">
+                <input type="radio" name="responsable" value="${i}" ${i===1?'checked':''}>
+                Responsable
+            </label>
+        </div>`;
+    }
+}
+
+// Cargar horas disponibles vía AJAX
+function cargarHorasDisponibles() {
+    const fecha = document.getElementById('reserva-fecha').value;
+    const hoyo = document.getElementById('reserva-hoyo').value;
+    const select = document.getElementById('reserva-hora');
+    select.innerHTML = '';
+    if (!fecha || !hoyo) {
+        select.innerHTML = '<option value="">Seleccione fecha y hoyo</option>';
+        return;
+    }
+
+    fetch(`/reservas/horas_disponibles/?fecha=${fecha}&hoyo=${hoyo}`)
+        .then(resp => resp.json())
+        .then(data => {
+            if (data.horas.length === 0) {
+                select.innerHTML = '<option value="">No hay horas disponibles</option>';
+            } else {
+                data.horas.forEach(hora => {
+                    select.innerHTML += `<option value="${hora}">${hora}</option>`;
+                });
+            }
+        });
+}
+
+// Validación mínima de 3 jugadores
+document.getElementById('form-nueva-reserva').onsubmit = function(e) {
+    let nombres = [];
+    for (let i = 1; i <= 4; i++) {
+        let val = this[`jugador_nombre_${i}`].value.trim();
+        if (val) nombres.push(val);
+    }
+    if (nombres.length < 3) {
+        alert('Debe ingresar al menos 3 jugadores.');
+        e.preventDefault();
+        return false;
+    }
+    // Aquí puedes hacer el submit vía AJAX o dejar que el form se envíe normalmente
+    // e.preventDefault(); // Descomenta si
+    };
+</script>
+{% endblock %}

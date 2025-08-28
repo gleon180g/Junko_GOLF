@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-xl mx-auto mt-8 bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-bold mb-4">Editar Reserva #{{ numero_reserva }}</h2>
+    <form method="post" id="form-editar-reserva">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="block font-medium">Fecha:</label>
+            <input type="date" name="fecha" value="{{ fecha }}" min="{{ fecha }}" class="border rounded px-2 py-1 w-full">
+        </div>
+        <div class="mb-3">
+            <label class="block font-medium">Hora:</label>
+            <select name="hora" class="border rounded px-2 py-1 w-full">
+                {% for hora_opt in horas %}
+                    <option value="{{ hora_opt }}" {% if hora == hora_opt %}selected{% endif %}>{{ hora_opt }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="block font-medium">Hoyo:</label>
+            <select name="hoyo" class="border rounded px-2 py-1 w-full">
+                {% for hoyo_opt in hoyos %}
+                    <option value="{{ hoyo_opt }}" {% if hoyo|stringformat:"s" == hoyo_opt|stringformat:"s" %}selected{% endif %}>{{ hoyo_opt }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="block font-medium">Estado:</label>
+            <select name="estado" class="border rounded px-2 py-1 w-full">
+                <option value="Confirmada" {% if estado == "Confirmada" %}selected{% endif %}>Confirmada</option>
+                <option value="Pendiente" {% if estado == "Pendiente" %}selected{% endif %}>Pendiente</option>
+                <option value="Cancelada" {% if estado == "Cancelada" %}selected{% endif %}>Cancelada</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="block font-medium">Jugadores:</label>
+            <div id="jugadores-lista">
+                {% for jugador in jugadores %}
+                <input type="text" name="jugadores" value="{{ jugador }}" class="border rounded px-2 py-1 w-full mb-1">
+                {% endfor %}
+            </div>
+            <button type="button" onclick="agregarJugador()" class="mt-2 px-2 py-1 bg-gray-200 rounded">Agregar jugador</button>
+            <p class="text-xs text-gray-500 mt-1">Mínimo 3 y máximo 4 jugadores por reserva.</p>
+        </div>
+        <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Guardar cambios</button>
+        <a href="{% url 'reservas' %}" class="ml-4 text-gray-600 hover:underline">Cancelar</a>
+    </form>
+</div>
+<script>
+function agregarJugador() {
+    const div = document.getElementById('jugadores-lista');
+    const inputs = div.querySelectorAll('input[name="jugadores"]');
+    if (inputs.length >= 4) {
+        alert("Solo puedes agregar hasta 4 jugadores.");
+        return;
+    }
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'jugadores';
+    input.className = 'border rounded px-2 py-1 w-full mb-1';
+    div.appendChild(input);
+}
+
+// Validación al enviar el formulario
+document.getElementById('form-editar-reserva').addEventListener('submit', function(e) {
+    const jugadores = document.querySelectorAll('input[name="jugadores"]');
+    if (jugadores.length < 3 || jugadores.length > 4) {
+        alert("Debes ingresar entre 3 y 4 jugadores.");
+        e.preventDefault();
+    }
+});
+</script>
+{% endblock %}

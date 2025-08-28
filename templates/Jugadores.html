@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center mt-8 mb-4">
+        <h1 class="text-3xl font-bold text-green-700 mb-6">Reporte de Jugadores</h1>
+    </div>
+    <div class="bg-white shadow rounded-lg p-4">
+        <form id="filtros-jugadores" class="flex flex-wrap gap-4 mb-4 items-end" onsubmit="filtrarJugadores(event)">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Nombre:</label>
+                <input type="text" id="filtro-nombre" placeholder="Nombre jugador" class="mt-1 block w-48 border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Reserva:</label>
+                <input type="text" id="filtro-reserva" placeholder="Nro. reserva" class="mt-1 block w-32 border-gray-300 rounded-md shadow-sm">
+            </div>
+            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Buscar</button>
+            <button type="button" id="reset-filtros-jugadores" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Reset</button>
+        </form>
+        <div id="jugadores-contenido" class="overflow-x-auto"></div>
+        <div id="total-jugadores" class="mt-4 text-green-700 font-semibold"></div>
+    </div>
+</div>
+
+<script>
+let jugadoresData = [];
+let paginaActual = 1;
+const jugadoresPorPagina = 15;
+
+function filtrarJugadores(event) {
+    event.preventDefault();
+    cargarJugadores();
+}
+
+function cargarJugadores() {
+    const nombre = document.getElementById('filtro-nombre').value;
+    const reserva = document.getElementById('filtro-reserva').value;
+
+    let params = [];
+    if (nombre) params.push(`nombre=${encodeURIComponent(nombre)}`);
+    if (reserva) params.push(`reserva=${encodeURIComponent(reserva)}`);
+
+    document.getElementById('jugadores-contenido').innerHTML = 'Cargando...';
+    fetch(`/reporte_jugadores/?${params.join('&')}`)
+        .then(response => response.json())
+        .then(data => {
+            jugadoresData = data.jugadores || [];
+            paginaActual = 1;
+            if (jugadoresData.length > 0) {
+                mostrarPaginaJugadores(paginaActual);
+            } else {
+                document.getElementById('jugadores-contenido').innerHTML = '<p>No hay jugadores para los filtros seleccionados.</p>';
+                document.getElementById('total-jugadores').textContent = 'Total de jugadores: 0';
+            }
+        })
+        .catch(() => {
+            document.getElementById('jugadores-contenido').innerHTML = '<p>Error al cargar los jugadores.</p>';
+            document.getElementById('total-jugadores').textContent = '';
+        });
+}
+
+function mostrarPaginaJugadores(pagina) {
+    const inicio = (pagina - 1) * jugadoresPorPagina;
+    const fin = inicio + jugadoresPorPagina;
+    const jugadoresPagina = jugadoresData.slice(inicio, fin);
+
+    let html = `<table class="min-w-full text-sm">
+        <thead>
+            <tr class="bg-gray-50">
+                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500">Nombre</th>
+                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500">Reserva</th>
+                <th class="px-4 py-2 text-left text-xs font-semibold text-gray-500">Responsable</th>
+                <th class="px-4 py-2 text-center text-xs font-semibold text-gray-500">Acciones</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white">`;
+    jugadoresPagina.forEach(j => {
+        html += `<tr class="border-b">
+            <td class="px-4 py-2">${j.nombre_jugador}</td>
+            <td class="px-4 py-2">${j.numero_reserva || j.id_reserva || ''}</td>
+            <td class="px-4 py-2">${j.es_responsable ? 'Sí' : 'No'}</td>
+            <td class="px-4 py-2 text-center">
+                <div class="flex gap-2 justify-center">
+                    <a href="/jugadores/editar/${j.id_jugador_reserva}/" class="inline-flex items-center px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs font-semibold transition" title="Editar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-2.828 0L9 13z"/></svg>
+                    </a>
+                    <button onclick="eliminarJugador('${j.id_jugador_reserva}')" class="inline-flex items-center px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs font-semibold transition" title="Eliminar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+    });
+    html += `</tbody></table>`;
+
+    // Paginación
+    const totalPaginas = Math.ceil(jugadoresData.length / jugadoresPorPagina);
+    if (totalPaginas > 1) {
+        html += `<div class="flex justify-between items-center mt-2 space-x-2">
+            <button type="button" ${pagina <= 1 ? 'disabled' : ''} onclick="cambiarPaginaJugadores(-1)" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50">Anterior</button>
+            <span>Página ${pagina} de ${totalPaginas}</span>
+            <button type="button" ${pagina >= totalPaginas ? 'disabled' : ''} onclick="cambiarPaginaJugadores(1)" class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50">Siguiente</button>
+        </div>`;
+    }
+
+    document.getElementById('jugadores-contenido').innerHTML = html;
+    document.getElementById('total-jugadores').textContent = `Total de jugadores: ${jugadoresData.length}`;
+}
+
+function cambiarPaginaJugadores(delta) {
+    paginaActual += delta;
+    mostrarPaginaJugadores(paginaActual);
+}
+
+function eliminarJugador(id) {
+    if (confirm('¿Seguro que deseas eliminar este jugador?')) {
+        // Aquí tu lógica de eliminación
+        alert('Funcionalidad de eliminación pendiente de implementar.');
+    }
+}
+
+document.getElementById('reset-filtros-jugadores').addEventListener('click', function() {
+    document.getElementById('filtro-nombre').value = '';
+    document.getElementById('filtro-reserva').value = '';
+    cargarJugadores();
+});
+
+document.addEventListener('DOMContentLoaded', cargarJugadores);
+</script>
+{% endblock %}
